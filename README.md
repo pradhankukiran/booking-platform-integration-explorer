@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Booking Platform Integration Explorer
 
-## Getting Started
+Short-Term Rental API Capability Mapper for direct-booking websites.
 
-First, run the development server:
+This app helps an agency compare property management systems before client
+credentials are available. It uses curated public documentation data to map
+listing sync, availability, rates, quote generation, reservation creation,
+payments, webhooks, guest data, implementation friction, and risk.
+
+## Stack
+
+- Next.js App Router
+- TypeScript
+- USWDS styling
+- Vercel-ready static deployment
+- Static capability data in `src/data/platforms.ts`
+
+## Local Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Deploy to Vercel as a standard Next.js project. No environment variables are
+required for the current static demo.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Future live adapters should use Vercel environment variables and server-side
+route handlers so platform API credentials never reach browser JavaScript.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Positioning
 
-## Deploy on Vercel
+Use this as a client-facing discovery tool:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Compare Guesty, Hostaway, Hospitable, Smoobu, Hostfully, OwnerRez, and Lodgify.
+- Select a booking flow: request to book, instant booking, or payment-enabled checkout.
+- Generate a readiness report with required access, implementation checklist, and risks.
+- Explain why secure backend integration is required before API keys are shared.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Data Caveat
+
+Capability data is based on public API documentation and conservative
+implementation assumptions. Final feasibility requires account access, enabled
+API permissions, payment settings, and sandbox testing.
