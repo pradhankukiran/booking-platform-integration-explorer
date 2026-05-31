@@ -4,6 +4,7 @@ import {
   BarChart3,
   CheckCircle2,
   Clipboard,
+  DatabaseZap,
   ExternalLink,
   FileText,
   Filter,
@@ -20,6 +21,11 @@ import {
   type CapabilityLevel,
   type Platform,
 } from "@/data/platforms";
+import {
+  credentialDefaults,
+  liveCredentialFields,
+  type LiveValidationResponse,
+} from "@/data/liveValidation";
 import styles from "./Explorer.module.css";
 
 type FlowMode = "inquiry" | "instant" | "payment";
@@ -128,6 +134,20 @@ Note: Based on public API documentation. Final feasibility requires account acce
 export function Explorer() {
   const [query, setQuery] = useState("");
   const [selectedSlug, setSelectedSlug] = useState(platforms[0].slug);
+  const [livePlatformSlug, setLivePlatformSlug] = useState(platforms[0].slug);
+  const [credentialsByPlatform, setCredentialsByPlatform] = useState<
+    Record<string, Record<string, string>>
+  >(() =>
+    Object.fromEntries(
+      platforms.map((platform) => [
+        platform.slug,
+        credentialDefaults(platform.slug),
+      ]),
+    ),
+  );
+  const [liveResult, setLiveResult] = useState<LiveValidationResponse | null>(null);
+  const [liveError, setLiveError] = useState("");
+  const [liveLoading, setLiveLoading] = useState(false);
   const [flowMode, setFlowMode] = useState<FlowMode>("payment");
   const [visibleSlugs, setVisibleSlugs] = useState(
     platforms.slice(0, 5).map((platform) => platform.slug),
@@ -136,6 +156,10 @@ export function Explorer() {
 
   const selectedPlatform =
     platforms.find((platform) => platform.slug === selectedSlug) ?? platforms[0];
+  const livePlatform =
+    platforms.find((platform) => platform.slug === livePlatformSlug) ?? platforms[0];
+  const liveFields = liveCredentialFields[livePlatform.slug] ?? [];
+  const liveCredentials = credentialsByPlatform[livePlatform.slug] ?? {};
 
   const filteredPlatforms = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -177,6 +201,48 @@ export function Explorer() {
     window.setTimeout(() => setCopyState("Copy report"), 1400);
   }
 
+  function updateCredential(key: string, value: string) {
+    setCredentialsByPlatform((current) => ({
+      ...current,
+      [livePlatform.slug]: {
+        ...(current[livePlatform.slug] ?? {}),
+        [key]: value,
+      },
+    }));
+  }
+
+  async function runLiveValidation() {
+    setLiveLoading(true);
+    setLiveError("");
+    setLiveResult(null);
+
+    try {
+      const response = await fetch("/api/live-validation", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          platformSlug: livePlatform.slug,
+          credentials: liveCredentials,
+        }),
+      });
+      const payload = (await response.json()) as
+        | LiveValidationResponse
+        | { message?: string };
+
+      if (!response.ok) {
+        throw new Error("message" in payload ? payload.message : "Live check failed.");
+      }
+
+      setLiveResult(payload as LiveValidationResponse);
+    } catch (error) {
+      setLiveError(error instanceof Error ? error.message : "Live check failed.");
+    } finally {
+      setLiveLoading(false);
+    }
+  }
+
   return (
     <div className={styles.app}>
       <header className={styles.header}>
@@ -198,6 +264,10 @@ export function Explorer() {
               <BarChart3 aria-hidden="true" size={18} />
               Compare
             </a>
+            <a className="usa-button usa-button--outline" href="#live-validation">
+              <DatabaseZap aria-hidden="true" size={18} />
+              Live test
+            </a>
           </div>
         </div>
       </header>
@@ -213,8 +283,8 @@ export function Explorer() {
             <span>API capability areas</span>
           </div>
           <div>
-            <strong>0</strong>
-            <span>client credentials needed for demo</span>
+            <strong>7</strong>
+            <span>live API probes available</span>
           </div>
         </section>
 
@@ -440,6 +510,151 @@ export function Explorer() {
                   ))}
                 </ul>
               </article>
+            </section>
+
+            <section className={styles.panel} id="live-validation">
+              <div className={styles.sectionHeader}>
+                <div>
+                  <p className={styles.kicker}>Live Validation</p>
+                  <h2>
+                    <DatabaseZap aria-hidden="true" size={20} />
+                    Test real API credentials
+                  </h2>
+                </div>
+                <span className={styles.sourceNote}>
+                  Credentials are posted to server-side route handlers for this check
+                  and are not stored.
+                </span>
+              </div>
+
+              <div className={styles.liveGrid}>
+                <div className={styles.liveForm}>
+                  <label className="usa-label" htmlFor="live-platform">
+                    Platform
+                  </label>
+                  <select
+                    className="usa-select"
+                    id="live-platform"
+                    onChange={(event) => {
+                      setLivePlatformSlug(event.target.value);
+                      setLiveResult(null);
+                      setLiveError("");
+                    }}
+                    value={livePlatform.slug}
+                  >
+                    {platforms.map((platform) => (
+                      <option key={platform.slug} value={platform.slug}>
+                        {platform.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {liveFields.map((field) => (
+                    <div key={field.key}>
+                      <label className="usa-label" htmlFor={`live-${field.key}`}>
+                        {field.label}
+                      </label>
+                      {field.type === "select" ? (
+                        <select
+                          className="usa-select"
+                          id={`live-${field.key}`}
+                          onChange={(event) =>
+                            updateCredential(field.key, event.target.value)
+                          }
+                          value={liveCredentials[field.key] ?? ""}
+                        >
+                          {(field.options ?? []).map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          autoComplete="off"
+                          className="usa-input"
+                          id={`live-${field.key}`}
+                          onChange={(event) =>
+                            updateCredential(field.key, event.target.value)
+                          }
+                          placeholder={field.placeholder}
+                          type={field.type ?? "text"}
+                          value={liveCredentials[field.key] ?? ""}
+                        />
+                      )}
+                      {field.help ? <p className={styles.fieldHelp}>{field.help}</p> : null}
+                    </div>
+                  ))}
+
+                  <button
+                    className="usa-button"
+                    disabled={liveLoading}
+                    onClick={runLiveValidation}
+                    type="button"
+                  >
+                    <DatabaseZap aria-hidden="true" size={18} />
+                    {liveLoading ? "Testing..." : `Test ${livePlatform.name}`}
+                  </button>
+                </div>
+
+                <div className={styles.liveResults}>
+                  <h3>{livePlatform.name} live check</h3>
+                  <p className={styles.summary}>
+                    Runs a read-only connection probe against authentication and
+                    listing/property endpoints where the platform exposes them.
+                  </p>
+
+                  {liveError ? (
+                    <div className={`${styles.validationBanner} ${styles.validationFail}`}>
+                      {liveError}
+                    </div>
+                  ) : null}
+
+                  {liveResult ? (
+                    <div className={styles.resultStack}>
+                      <div
+                        className={`${styles.validationBanner} ${
+                          liveResult.status === "pass"
+                            ? styles.validationPass
+                            : liveResult.status === "warn"
+                              ? styles.validationWarn
+                              : styles.validationFail
+                        }`}
+                      >
+                        {liveResult.summary}
+                      </div>
+                      {liveResult.results.map((result) => (
+                        <article className={styles.resultCard} key={result.label}>
+                          <div>
+                            <strong>{result.label}</strong>
+                            <span
+                              className={`${styles.resultStatus} ${
+                                result.status === "pass"
+                                  ? styles.resultPass
+                                  : result.status === "warn"
+                                    ? styles.resultWarn
+                                    : styles.resultFail
+                              }`}
+                            >
+                              {result.status}
+                              {result.statusCode ? ` ${result.statusCode}` : ""}
+                            </span>
+                          </div>
+                          <p>{result.message}</p>
+                          {result.endpoint ? <code>{result.endpoint}</code> : null}
+                          {typeof result.count === "number" ? (
+                            <small>{result.count} records in sample response</small>
+                          ) : null}
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.emptyState}>
+                      Enter credentials, run test, inspect server-side result.
+                    </div>
+                  )}
+                </div>
+              </div>
             </section>
 
             <section className={styles.panel} id="report">
