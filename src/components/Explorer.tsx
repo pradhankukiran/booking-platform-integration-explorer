@@ -2,7 +2,6 @@
 
 import {
   BarChart3,
-  CheckCircle2,
   Clipboard,
   DatabaseZap,
   ExternalLink,
@@ -201,14 +200,27 @@ export function Explorer() {
     window.setTimeout(() => setCopyState("Copy report"), 1400);
   }
 
-  function viewPlatformDetails(slug: string) {
-    setSelectedSlug(slug);
+  function scrollToElement(id: string) {
     window.requestAnimationFrame(() => {
-      document.getElementById("platform-detail")?.scrollIntoView({
+      document.getElementById(id)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
     });
+  }
+
+  function viewPlatformDetails(slug: string) {
+    setSelectedSlug(slug);
+    setLivePlatformSlug(slug);
+    scrollToElement("platform-detail");
+  }
+
+  function testPlatform(slug: string) {
+    setSelectedSlug(slug);
+    setLivePlatformSlug(slug);
+    setLiveResult(null);
+    setLiveError("");
+    scrollToElement("live-validation");
   }
 
   function updateCredential(key: string, value: string) {
@@ -246,8 +258,10 @@ export function Explorer() {
       }
 
       setLiveResult(payload as LiveValidationResponse);
+      scrollToElement("live-results");
     } catch (error) {
       setLiveError(error instanceof Error ? error.message : "Live check failed.");
+      scrollToElement("live-results");
     } finally {
       setLiveLoading(false);
     }
@@ -325,7 +339,7 @@ export function Explorer() {
                       platform.slug === selectedSlug ? styles.activePlatform : ""
                     }`}
                     key={platform.slug}
-                    onClick={() => setSelectedSlug(platform.slug)}
+                    onClick={() => viewPlatformDetails(platform.slug)}
                     type="button"
                   >
                     <span>{platform.name}</span>
@@ -350,6 +364,10 @@ export function Explorer() {
                 ))}
               </div>
             </div>
+
+            {filteredPlatforms.length === 0 ? (
+              <div className={styles.emptyState}>No platforms match this search.</div>
+            ) : null}
           </aside>
 
           <div className={styles.content}>
@@ -363,11 +381,11 @@ export function Explorer() {
                   <p>{platform.summary}</p>
                   <button
                     className="usa-button usa-button--outline"
-                    onClick={() => viewPlatformDetails(platform.slug)}
+                    onClick={() => testPlatform(platform.slug)}
                     type="button"
                   >
-                    <CheckCircle2 aria-hidden="true" size={18} />
-                    View details
+                    <DatabaseZap aria-hidden="true" size={18} />
+                    Live test
                   </button>
                 </article>
               ))}
@@ -607,7 +625,7 @@ export function Explorer() {
                   </button>
                 </div>
 
-                <div className={styles.liveResults}>
+                <div className={styles.liveResults} id="live-results">
                   <h3>{livePlatform.name} live check</h3>
                   <p className={styles.summary}>
                     Runs a read-only connection probe against authentication and
