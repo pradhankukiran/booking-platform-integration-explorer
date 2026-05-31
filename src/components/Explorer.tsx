@@ -201,6 +201,16 @@ export function Explorer() {
     window.setTimeout(() => setCopyState("Copy report"), 1400);
   }
 
+  function viewPlatformDetails(slug: string) {
+    setSelectedSlug(slug);
+    window.requestAnimationFrame(() => {
+      document.getElementById("platform-detail")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
   function updateCredential(key: string, value: string) {
     setCredentialsByPlatform((current) => ({
       ...current,
@@ -353,11 +363,11 @@ export function Explorer() {
                   <p>{platform.summary}</p>
                   <button
                     className="usa-button usa-button--outline"
-                    onClick={() => setSelectedSlug(platform.slug)}
+                    onClick={() => viewPlatformDetails(platform.slug)}
                     type="button"
                   >
                     <CheckCircle2 aria-hidden="true" size={18} />
-                    Inspect
+                    View details
                   </button>
                 </article>
               ))}
@@ -408,7 +418,7 @@ export function Explorer() {
             </section>
 
             <section className={styles.detailGrid}>
-              <article className={styles.panel}>
+              <article className={styles.panel} id="platform-detail">
                 <div className={styles.sectionHeader}>
                   <div>
                     <p className={styles.kicker}>Platform Detail</p>
