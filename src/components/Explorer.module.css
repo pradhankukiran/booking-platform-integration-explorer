@@ -15,7 +15,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2rem;
   align-items: end;
-  width: min(1180px, calc(100% - 2rem));
+  width: min(1600px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 2rem 0;
 }
@@ -68,7 +68,7 @@
 }
 
 .main {
-  width: min(1180px, calc(100% - 2rem));
+  width: min(1600px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 1.5rem 0 3rem;
 }
@@ -108,7 +108,7 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
 }
@@ -202,7 +202,7 @@
 
 .leaderGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
 }
 
@@ -254,6 +254,7 @@
 }
 
 .tableWrap table {
+  width: 100%;
   min-width: 740px;
   margin: 0;
 }
@@ -294,7 +295,7 @@
 
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(360px, 1fr));
   gap: 1.25rem;
 }
 
@@ -386,7 +387,7 @@
 
 .liveGrid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(320px, 0.75fr) minmax(520px, 1.25fr);
   gap: 1.25rem;
   align-items: start;
 }
