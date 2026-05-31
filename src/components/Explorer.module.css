@@ -21,7 +21,6 @@
 }
 
 .header h1 {
-  max-width: 820px;
   margin: 0;
   color: #ffffff;
   font-size: clamp(2rem, 5vw, 3.75rem);
@@ -30,7 +29,6 @@
 }
 
 .headerCopy {
-  max-width: 760px;
   margin: 1rem 0 0;
   color: #dfe1e2;
   font-size: 1.12rem;
